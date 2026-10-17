@@ -21,7 +21,8 @@ function entryName(sourcePath: string) {
 describe("library build", () => {
     beforeAll(async () => {
         await build({ configFile: viteConfigFile });
-    });
+        // Declaration generation alone can take well over the default 10s hook timeout.
+    }, 120_000);
 
     it("emits JavaScript and declarations for every index entrypoint", () => {
         const entrypoints = globSync(resolve(sourceRoot, "**/index.ts"));

@@ -30,8 +30,13 @@ const testConfig = {
     setupFiles: "./tests/setup.ts",
 } satisfies NonNullable<UserConfig["test"]>;
 
+/**
+ * The command-line entry is a plain file, not an `index.ts`, so it is listed explicitly.
+ */
+const CLI_ENTRY = "cli/bin";
+
 const entries = Object.fromEntries(
-    globSync("src/**/index.ts").map((file) => {
+    [...globSync("src/**/index.ts"), "src/cli/bin.ts"].map((file) => {
         const relativePath = path.relative("src", file);
         const entryName = relativePath.replace(/\.ts$/, "").replace(/\\/g, "/");
 
@@ -48,10 +53,15 @@ export default defineConfig({
             formats: ["es"],
         },
         rolldownOptions: {
-            external: isExternalRuntimePackage,
+            // Node built-ins keep their `node:` specifiers. The browser stubs Vite would otherwise use break the CLI.
+            external: (id) =>
+                id.startsWith("node:") || isExternalRuntimePackage(id),
             output: {
                 entryFileNames: "[name].js",
                 chunkFileNames: "internal/[name]-[hash].js",
+                // Only the command-line entry runs directly, so only it needs a shebang.
+                banner: (chunk) =>
+                    chunk.name === CLI_ENTRY ? "#!/usr/bin/env node" : "",
             },
         },
         outDir: "dist",

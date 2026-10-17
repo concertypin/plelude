@@ -1,12 +1,12 @@
 {
-    "name": "template-typescript-vite",
+    "name": "plelude",
     "private": true,
-    "version": "0.0.0",
+    "version": "0.1.0",
     "type": "module",
     "license": "MIT",
-    "author": {
-        "name": "concertypin",
-        "url": "https://github.com/concertypin"
+    "description": "Analyze video and audio with Gemini from the command line, printing text for agents and people.",
+    "bin": {
+        "plelude": "./dist/cli/bin.js"
     },
     "main": "./dist/index.js",
     "module": "./dist/index.js",
@@ -40,18 +40,22 @@
     },
     "devDependencies": {
         "@concertypin/config": "^0.5.0",
-        "@types/node": "^26.6.4",
-        "@vitest/coverage-v8": "^5.0.3",
+        "@types/node": "^26.6.5",
+        "@vitest/coverage-v8": "^5.0.5",
         "cross-env": "^10.1.0",
         "globals": "^17.13.0",
-        "oxfmt": "^0.72.0",
-        "oxlint": "^1.87.0",
-        "oxlint-tsgolint": "^7.0.2003",
+        "oxfmt": "^0.73.0",
+        "oxlint": "^1.88.0",
+        "oxlint-tsgolint": "7.0.2003",
         "simple-git-hooks": "^2.14.0",
         "typescript": "~6.0.3",
-        "vite": "^8.3.2",
+        "vite": "^8.3.4",
         "vite-plugin-dts": "^5.1.2",
-        "vitest": "^5.0.3"
+        "vitest": "^5.0.5"
     },
-    "packageManager": "pnpm@12.9.1"
+    "packageManager": "pnpm@12.9.1",
+    "dependencies": {
+        "@google/genai": "^2.30.0",
+        "zod": "^4.6.7"
+    }
 }

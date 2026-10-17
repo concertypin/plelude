@@ -1,6 +1,10 @@
 allowBuilds:
   esbuild: true
   simple-git-hooks: true
+  # Not needed at runtime: genai's preinstall is a no-op and its prepare script
+  # is not published; protobufjs's postinstall only prints a version warning.
+  "@google/genai": false
+  protobufjs: false
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - "@concertypin/*"

@@ -1,62 +1,77 @@
 # AGENTS.md
 
-This file provides guidance to AI agents when working with code in this repository.
-All agents, such as Claude Code, should keep `**/AGENTS.md` in mind.
+Guidance for AI agents working in this repository. Claude Code and other agents should read it before changing code.
 
-## Project Type
+## What this is
 
-This is a **vanilla TypeScript library template** built with Vite. It is designed to be bundled into ESM format for distribution as a package.
+`plelude` is a command-line tool. It sends video, audio, or YouTube media to Gemini and prints the answer as plain text on stdout, so agents without native media input can use it. The same core is also a library (`src/index.ts`).
 
-## Development Commands
+## Layout
 
-```bash
-# Start development build in watch mode
-pnpm dev
-
-# Build for production (outputs ESM to dist/)
-pnpm build
-
-# Format code
-pnpm format
-
-# Lint code
-pnpm lint
-
-# Run unit tests (Vitest in Node environment)
-pnpm test
+```
+src/
+  index.ts            library exports
+  cli/
+    bin.ts            executable entry (built with a node shebang)
+    main.ts           command dispatch: ask, upload, config
+    ask.ts            `ask` argument parsing and flow
+    upload.ts         `upload`
+    config-command.ts `config set|get|unset|path`
+    shared.ts         exit codes, CliDeps, and the [plelude] output loop
+    help.ts           help text (agent-facing; keep it accurate)
+    prod.ts           real stdin/stdout/terminal wiring
+    version.ts        VERSION, checked against package.json by a test
+  core/
+    options.ts        planAsk: validates ask input into an AskPlan
+    media.ts          classify -m values; MIME types
+    analyze.ts        build input/params, resolve media, stream with retries
+    gemini.ts         the GeminiPort (SDK adapter) and zod-checked reads
+    remote.ts         HEAD probe and download for remote URLs
+    cache.ts          upload cache (files.json), keyed by key fingerprint
+    config.ts         config.json, API key resolution
+    paths.ts          ~/.config/plelude locations
+tests/unit/           vitest; fakes for Gemini, fetch, and stdin/stdout
+scripts/probe-gemini.ts   manual probe against the live API (see below)
 ```
 
-## Architecture
+## Commands
 
-- **Entry point**: `src/index.ts` - The main entry point that exports the library's API.
-- **ES modules** throughout (`"type": "module"` in package.json)
-- **Output format**: Generates `.js` (ESM) files in the `dist/` directory.
-- **Type definitions**: Automatically generates `.d.ts` files using `vite-plugin-dts`.
+- `pnpm run check`: format, lint (type-aware), tests. Run this before every commit.
+- `pnpm build`: builds `dist/`, including `dist/cli/bin.js`.
+- `node dist/cli/bin.js ask "..." -m clip.mp4`: runs the built CLI against the real API. It uses the key from `~/.config/plelude/config.json` or `GEMINI_API_KEY`.
+- `pnpm exec vitest run <file>`: one test file.
 
-## Coding Standards
+## Conventions
 
-If you can't access the project's convention, such as hono, typescript, typescript-schema, ask user for adding MCP server.
-MCP Server:
+- Output: stdout only. Every line the agent may read starts with `[plelude]` except the streamed answer. Do not write to stderr, except the terminal-only key prompt.
+- Exit codes are part of the interface (`EXIT` in `src/cli/shared.ts`): 0 ok, 1 Gemini, 2 usage, 3 no key.
+- Never print the API key. Errors pass through `redactKey`. Never accept the key as a command-line argument.
+- Never use `as` casts (except `as const`). Parse external data with zod.
+- Use `import * as z from "zod"`. Use `import type` for type-only imports.
+- Keep side effects behind `CliDeps` / `GeminiPort` so tests can fake them.
 
-- Endpoint: https://conventions.aieuroka.workers.dev/mcp (for most clients), https://conventions.aieuroka.workers.dev/with-tool/mcp (for GitHub Copilot, which doesn't support resource retrieval)
-- Streamable HTTP, without authentication
+## Gemini API facts (measured against the live API)
 
-## TypeScript Configuration
+These differ from the docs in places. Check against the API again before changing them.
 
-- **Path alias**: `@/*` maps to `src/*` (configured in `tsconfig.base.json`)
-- **Project references**: Uses `tsconfig.json` with `app` and `node` references
-- **Strict mode** enabled
+- Video `start_offset` and `end_offset` must be duration strings such as `"80s"`. Plain numbers are rejected with 400. This is the reverse of what the docs' examples show.
+- Video resolution is set on the video part, as `resolution: "low"`. It is not allowed in `generation_config`, where `media_resolution` returns 400.
+- `generation_config.max_output_tokens` works. Thinking tokens count against it, so a small limit can leave the answer empty.
+- `background: true` requires `store: true` and cannot be used with audio input on the agent variants (`...-agent` returns 400). plelude does not use background. Every analysis streams in the foreground.
+- Agentic video processing can invent speech from audio that has none. plelude prepends `AGENTIC_SYSTEM_INSTRUCTION` (in `src/core/analyze.ts`). Keep it unless you have re-measured.
+- Follow-ups need `model`, `system_instruction`, `generation_config`, and `tools` sent again. plelude inherits them from `interactions.get`.
+- `gemini-flash-lite-latest` is a Google-managed alias. Its target model can change.
 
-## Package Manager
+## Probe script
 
-This project uses **pnpm**.
+`scripts/probe-gemini.ts` calls the real API with the key from the config file. It never prints the key. Steps are selected on the command line (`node scripts/probe-gemini.ts model upload create stream ...`). It keeps state in `.tmp/probe-state.json`. `.tmp/` is git-ignored.
 
-## Using This Template
+Use it when a behavior is in doubt. Do not treat it as a test suite. Its checks cost quota.
 
-Immediately after creating a project from this template, upgrade all dependencies and refresh the lockfile:
+## Do not
 
-```bash
-pnpm up --latest
-```
-
-Run the project's format, lint, test, and build checks after the upgrade and resolve every resulting error before continuing development.
+- Add background execution. It was removed on purpose.
+- Add `--timeout`, `--no-wait`, or `result <id>`. They depend on background.
+- Commit a real key, or write one into any file under the repository.
+- Push, publish, or open a PR without the user's explicit permission. Work stays on `local/*` branches and is squash-merged into `dev/*` (see the `branching` skill).
+- Lower the 100% line coverage on `src/core` without a reason written in the commit.
