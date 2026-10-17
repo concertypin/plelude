@@ -1,0 +1,4 @@
+import base from "@concertypin/config/oxfmt";
+import { defineConfig } from "oxfmt";
+
+export default defineConfig(base());
