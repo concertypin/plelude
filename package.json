@@ -1,7 +1,7 @@
 {
     "name": "plelude",
     "private": false,
-    "version": "0.1.0",
+    "version": "0.1.1",
     "type": "module",
     "license": "MIT",
     "author": {
@@ -18,7 +18,7 @@
     },
     "description": "Analyze video and audio with Gemini from the command line, printing text for agents and people.",
     "bin": {
-        "plelude": "./dist/cli/bin.js"
+        "plelude": "dist/cli/bin.js"
     },
     "main": "./dist/index.js",
     "module": "./dist/index.js",
