@@ -1,9 +1,21 @@
 {
     "name": "plelude",
-    "private": true,
+    "private": false,
     "version": "0.1.0",
     "type": "module",
     "license": "MIT",
+    "author": {
+        "name": "concertypin",
+        "url": "https://github.com/concertypin"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/concertypin/plelude.git"
+    },
+    "homepage": "https://github.com/concertypin/plelude#readme",
+    "bugs": {
+        "url": "https://github.com/concertypin/plelude/issues"
+    },
     "description": "Analyze video and audio with Gemini from the command line, printing text for agents and people.",
     "bin": {
         "plelude": "./dist/cli/bin.js"
