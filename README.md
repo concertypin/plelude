@@ -12,13 +12,23 @@ Red for the first 3 seconds, then blue.
 [plelude] done session=v1_...  follow-up: plelude ask -c v1_... "<question>"
 ```
 
-## Running it
+## Install
 
-Not published yet. From a checkout, build once and run the built file. Every example below uses `plelude`; replace it with `node dist/cli/bin.js` until the package is installed as a command.
+```bash
+pnpm add -g plelude
+```
+
+Or run it once without installing:
+
+```bash
+pnpx plelude ask "What colors appear, and when?" -m clip.mp4
+```
+
+To run from a checkout instead, build once and call the built file in place of `plelude`:
 
 ```bash
 pnpm build
-node dist/cli/bin.js ask "What colors appear, and when?" -m .tmp/red-blue.mp4
+node dist/cli/bin.js ask "What colors appear, and when?" -m clip.mp4
 ```
 
 ## Setup
